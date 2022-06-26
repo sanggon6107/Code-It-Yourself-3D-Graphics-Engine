@@ -21,6 +21,13 @@ struct Mesh
 	vector<Triangle> tris_;
 };
 
+// 다양한 행렬 연산을 위해 4x4 매트릭스 구조체를 만든다.
+struct Mat4x4
+{
+	float m_[4][4]{ 0 };
+};
+
+
 
 class olcEngine3D : public olcConsoleGameEngine
 {
@@ -62,6 +69,23 @@ public :
 		
 		};
 
+
+		// Projection Matrix
+		float f_near = 0.1f;
+		float f_far = 1000.0f;
+		float f_fov = 90.0f;
+		float f_aspect_ratio = static_cast<float>(ScreenHeight()) / static_cast<float>(ScreenWidth()); // 스크린의 (h/w) 를 x좌표에 곱하여 x, y 스케일을 맞춰준다.
+		float f_fov_rad = 1.0f / tanf(f_fov * 0.5f / 180.0f * 3.14159f);  // fov에 따라 x, y의 화면상 스케일을 조절해야한다. 즉, fov가 넓어질 수록 화면상 물체는 작게 표현된다.
+
+		MatProj_.m_[0][0] = f_aspect_ratio * f_fov_rad;
+		MatProj_.m_[1][1] = f_fov_rad;
+		MatProj_.m_[2][2] = f_far / (f_far / f_near);
+		MatProj_.m_[3][2] = (-f_far * f_near) / (f_far - f_near);
+		MatProj_.m_[2][3] = 1.0f;
+		MatProj_.m_[3][3] = 0.0f;
+		
+		
+
 		return true;
 	}
 
@@ -72,6 +96,7 @@ public :
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
 		// draw Triangles.
+		// The optical center (0, 0) is the center of the screen.
 		for (auto tri : MeshCube_.tris_)
 		{
 
@@ -82,7 +107,21 @@ public :
 
 private :
 	Mesh MeshCube_;
+	Mat4x4 MatProj_;
 
+
+	void MultiplyMatrixVector(Vec3d& i, Vec3d& o, Mat4x4& m)
+	{
+		o.x_ = i.x_ * m.m_[0][0] + i.y_ * m.m_[1][0] + i.z_ * m.m_[2][0] + m.m_[3][0];
+		o.y_ = i.x_ * m.m_[0][1] + i.y_ * m.m_[1][1] + i.z_ * m.m_[2][1] + m.m_[3][1];
+		o.z_ = i.x_ * m.m_[0][2] + i.y_ * m.m_[1][2] + i.z_ * m.m_[2][2] + m.m_[3][2];
+		float w = i.x_ * m.m_[0][3] + i.y_ * m.m_[1][3] + i.z_ * m.m_[2][3] + m.m_[3][3];
+		
+		if (w != 0.0f)
+		{
+			o.x_ /= w;   o.y_ /= w;   o.z_ /= w;
+		}
+	}
 };
 
 
