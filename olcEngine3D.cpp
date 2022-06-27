@@ -40,7 +40,7 @@ public :
 	bool OnUserCreate() override
 	{
 		// Unit Cube를 생성한다.
-		MeshCube_.tris_ = 
+		mesh_cube_.tris_ = 
 		{
 			// x방향은 화면상 오른쪽, y방향은 화면상 위쪽, z방향은 화면상 안쪽이다.
 			// south
@@ -77,12 +77,12 @@ public :
 		float f_aspect_ratio = static_cast<float>(ScreenHeight()) / static_cast<float>(ScreenWidth()); // 스크린의 (h/w) 를 x좌표에 곱하여 x, y 스케일을 맞춰준다.
 		float f_fov_rad = 1.0f / tanf(f_fov * 0.5f / 180.0f * 3.14159f);  // fov에 따라 x, y의 화면상 스케일을 조절해야한다. 즉, fov가 넓어질 수록 화면상 물체는 작게 표현된다.
 
-		MatProj_.m_[0][0] = f_aspect_ratio * f_fov_rad;
-		MatProj_.m_[1][1] = f_fov_rad;
-		MatProj_.m_[2][2] = f_far / (f_far / f_near);
-		MatProj_.m_[3][2] = (-f_far * f_near) / (f_far - f_near);
-		MatProj_.m_[2][3] = 1.0f;
-		MatProj_.m_[3][3] = 0.0f;
+		mat_proj_.m_[0][0] = f_aspect_ratio * f_fov_rad;
+		mat_proj_.m_[1][1] = f_fov_rad;
+		mat_proj_.m_[2][2] = f_far / (f_far / f_near);
+		mat_proj_.m_[3][2] = (-f_far * f_near) / (f_far - f_near);
+		mat_proj_.m_[2][3] = 1.0f;
+		mat_proj_.m_[3][3] = 0.0f;
 		
 		
 
@@ -97,17 +97,20 @@ public :
 
 		// draw Triangles.
 		// The optical center (0, 0) is the center of the screen.
-		for (auto tri : MeshCube_.tris_)
+		for (auto tri : mesh_cube_.tris_)
 		{
-
+			Triangle tri_projected;
+			MultiplyMatrixVector(tri.p_[0], tri_projected.p_[0], mat_proj_);
+			MultiplyMatrixVector(tri.p_[1], tri_projected.p_[1], mat_proj_);
+			MultiplyMatrixVector(tri.p_[2], tri_projected.p_[2], mat_proj_);
 		}
 
 		return true;
 	}
 
 private :
-	Mesh MeshCube_;
-	Mat4x4 MatProj_;
+	Mesh mesh_cube_;
+	Mat4x4 mat_proj_;
 
 
 	void MultiplyMatrixVector(Vec3d& i, Vec3d& o, Mat4x4& m)
