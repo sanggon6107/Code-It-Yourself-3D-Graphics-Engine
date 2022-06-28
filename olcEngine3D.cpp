@@ -103,6 +103,12 @@ public :
 			MultiplyMatrixVector(tri.p_[0], tri_projected.p_[0], mat_proj_);
 			MultiplyMatrixVector(tri.p_[1], tri_projected.p_[1], mat_proj_);
 			MultiplyMatrixVector(tri.p_[2], tri_projected.p_[2], mat_proj_);
+			
+			DrawTriangle(tri_projected.p_[0].x_, tri_projected.p_[0].y_,
+				tri_projected.p_[1].x_, tri_projected.p_[1].y_,
+				tri_projected.p_[2].x_, tri_projected.p_[2].y_,
+				PIXEL_SOLID, FG_WHITE);
+
 		}
 
 		return true;
