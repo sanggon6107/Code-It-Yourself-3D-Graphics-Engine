@@ -100,10 +100,33 @@ public :
 		for (auto tri : mesh_cube_.tris_)
 		{
 			Triangle tri_projected;
-			MultiplyMatrixVector(tri.p_[0], tri_projected.p_[0], mat_proj_);
-			MultiplyMatrixVector(tri.p_[1], tri_projected.p_[1], mat_proj_);
-			MultiplyMatrixVector(tri.p_[2], tri_projected.p_[2], mat_proj_);
 			
+			Triangle tri_translated{ tri };
+			tri_translated.p_[0].z_ = tri.p_[0].z_ + 3.0f;
+			tri_translated.p_[1].z_ = tri.p_[1].z_ + 3.0f;
+			tri_translated.p_[2].z_ = tri.p_[2].z_ + 3.0f;
+
+
+			MultiplyMatrixVector(tri_translated.p_[0], tri_projected.p_[0], mat_proj_);
+			MultiplyMatrixVector(tri_translated.p_[1], tri_projected.p_[1], mat_proj_);
+			MultiplyMatrixVector(tri_translated.p_[2], tri_projected.p_[2], mat_proj_);
+			
+			// Scale into view
+			tri_projected.p_[0].x_ += 1.0f; tri_projected.p_[0].y_ += 1.0f;
+			tri_projected.p_[1].x_ += 1.0f; tri_projected.p_[1].y_ += 1.0f;
+			tri_projected.p_[2].x_ += 1.0f; tri_projected.p_[2].y_ += 1.0f;
+
+			
+			tri_projected.p_[0].x_ *= 0.5f * (float)ScreenWidth();
+			tri_projected.p_[1].x_ *= 0.5f * (float)ScreenWidth();
+			tri_projected.p_[2].x_ *= 0.5f * (float)ScreenWidth();
+
+			tri_projected.p_[0].y_ *= 0.5f * (float)ScreenHeight();
+			tri_projected.p_[1].y_ *= 0.5f * (float)ScreenHeight();
+			tri_projected.p_[2].y_ *= 0.5f * (float)ScreenHeight();
+
+
+			// Draw a triangle( using olcConsoleGameEngine )
 			DrawTriangle(tri_projected.p_[0].x_, tri_projected.p_[0].y_,
 				tri_projected.p_[1].x_, tri_projected.p_[1].y_,
 				tri_projected.p_[2].x_, tri_projected.p_[2].y_,
@@ -138,10 +161,10 @@ private :
 int main()
 {
 
-
 	olcEngine3D demo;
-	if (demo.ConstructConsole(256, 240, 4, 4))
+	if (demo.ConstructConsole(256, 215, 4, 4))
 	{
 		demo.Start();
 	}
+
 }
