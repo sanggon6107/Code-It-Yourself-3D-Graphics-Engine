@@ -27,7 +27,7 @@ struct Mat4x4
 	float m_[4][4]{ 0 };
 };
 
-
+float f_theta_;
 
 class olcEngine3D : public olcConsoleGameEngine
 {
@@ -84,39 +84,71 @@ public :
 		mat_proj_.m_[2][3] = 1.0f;
 		mat_proj_.m_[3][3] = 0.0f;
 		
-		
 
 		return true;
 	}
 
 	bool OnUserUpdate(float elapsed_time) override
 	{
-
 		// clear the screen.
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
+
+		// Rotate the cube.
+		Mat4x4 mat_rot_z, mat_rot_x;
+
+		f_theta_ += 1.0f * elapsed_time;
+
+		// Rotation Z
+		mat_rot_z.m_[0][0] = cosf(f_theta_);
+		mat_rot_z.m_[0][1] = sinf(f_theta_);
+		mat_rot_z.m_[1][0] = -sinf(f_theta_);
+		mat_rot_z.m_[1][1] = cosf(f_theta_);
+		mat_rot_z.m_[2][2] = 1;
+		mat_rot_z.m_[3][3] = 1;
+
+		// Rotation X
+		mat_rot_x.m_[0][0] = 1;
+		mat_rot_x.m_[1][1] = cosf(f_theta_ * 0.5f);
+		mat_rot_x.m_[1][2] = sinf(f_theta_ * 0.5f);
+		mat_rot_x.m_[2][1] = -sinf(f_theta_ * 0.5f);
+		mat_rot_x.m_[2][2] = cosf(f_theta_ * 0.5f);
+		mat_rot_x.m_[3][3] = 1;
+		
+
+
 		// draw Triangles.
 		// The optical center (0, 0) is the center of the screen.
-		for (auto tri : mesh_cube_.tris_)
+		for (auto& tri : mesh_cube_.tris_)
 		{
-			Triangle tri_projected;
+			Triangle tri_projected, tri_rotated_z, tri_rotated_zx;
 			
-			Triangle tri_translated{ tri };
-			tri_translated.p_[0].z_ = tri.p_[0].z_ + 3.0f;
-			tri_translated.p_[1].z_ = tri.p_[1].z_ + 3.0f;
-			tri_translated.p_[2].z_ = tri.p_[2].z_ + 3.0f;
+
+			MultiplyMatrixVector(tri.p_[0], tri_rotated_z.p_[0], mat_rot_z);
+			MultiplyMatrixVector(tri.p_[1], tri_rotated_z.p_[1], mat_rot_z);
+			MultiplyMatrixVector(tri.p_[2], tri_rotated_z.p_[2], mat_rot_z);
+
+			MultiplyMatrixVector(tri_rotated_z.p_[0], tri_rotated_zx.p_[0], mat_rot_x);
+			MultiplyMatrixVector(tri_rotated_z.p_[1], tri_rotated_zx.p_[1], mat_rot_x);
+			MultiplyMatrixVector(tri_rotated_z.p_[2], tri_rotated_zx.p_[2], mat_rot_x);
+
+
+			Triangle tri_translated{ tri_rotated_zx };
+			tri_translated.p_[0].z_ = tri_rotated_zx.p_[0].z_ + 3.0f;
+			tri_translated.p_[1].z_ = tri_rotated_zx.p_[1].z_ + 3.0f;
+			tri_translated.p_[2].z_ = tri_rotated_zx.p_[2].z_ + 3.0f;
 
 
 			MultiplyMatrixVector(tri_translated.p_[0], tri_projected.p_[0], mat_proj_);
 			MultiplyMatrixVector(tri_translated.p_[1], tri_projected.p_[1], mat_proj_);
 			MultiplyMatrixVector(tri_translated.p_[2], tri_projected.p_[2], mat_proj_);
 			
-			// Scale into view
+			// 좌표 지정
 			tri_projected.p_[0].x_ += 1.0f; tri_projected.p_[0].y_ += 1.0f;
 			tri_projected.p_[1].x_ += 1.0f; tri_projected.p_[1].y_ += 1.0f;
 			tri_projected.p_[2].x_ += 1.0f; tri_projected.p_[2].y_ += 1.0f;
 
-			
+			// Scale into view
 			tri_projected.p_[0].x_ *= 0.5f * (float)ScreenWidth();
 			tri_projected.p_[1].x_ *= 0.5f * (float)ScreenWidth();
 			tri_projected.p_[2].x_ *= 0.5f * (float)ScreenWidth();
